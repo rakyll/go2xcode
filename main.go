@@ -24,6 +24,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"strings"
 )
 
 var o = flag.String("o", "", "directory to output the Xcode project; by default pwd")
@@ -63,6 +64,7 @@ func main() {
 		"GOOS=darwin",
 		"GOARCH=arm",
 		"CGO_ENABLED=1",
+		"GOPATH=" + goEnv("GOPATH"),
 	}
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
@@ -75,6 +77,7 @@ func main() {
 		"GOOS=darwin",
 		"GOARCH=arm64",
 		"CGO_ENABLED=1",
+		"GOPATH=" + goEnv("GOPATH"),
 	}
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
@@ -121,6 +124,17 @@ func touchAndWrite(dst string, data []byte) error {
 		return err
 	}
 	return ioutil.WriteFile(dst, data, 0644)
+}
+
+func goEnv(name string) string {
+	if val := os.Getenv(name); val != "" {
+		return val
+	}
+	val, err := exec.Command("go", "env", name).Output()
+	if err != nil {
+		panic(err) // the Go tool was tested to work earlier
+	}
+	return strings.TrimSpace(string(val))
 }
 
 var infoPlist = []byte(`<?xml version="1.0" encoding="UTF-8"?>
