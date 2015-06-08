@@ -28,6 +28,7 @@ import (
 )
 
 var o = flag.String("o", "", "directory to output the Xcode project; by default pwd")
+var verbose = flag.Bool("v", false, "trace build steps")
 
 func main() {
 	flag.Parse()
@@ -41,7 +42,7 @@ func main() {
 	// Images.xcassets/AppIcon.appiconset/Contents.json
 	dir, err := ioutil.TempDir("", "go2xcode")
 	if err != nil {
-		panic(err)
+		log.Fatalln(err)
 	}
 	defer os.RemoveAll(dir)
 
@@ -53,12 +54,15 @@ func main() {
 	}
 
 	for dst, v := range layout {
+		trace("make the workspace at %v", dst)
 		if err := touchAndWrite(dst, v); err != nil {
 			log.Fatalf("failed to touch and write to %v; err = %v", dst, err)
 		}
 	}
 
 	// TODO(jbd): Build darwin/arm and darwin/arm64 cross compilers.
+
+	trace("build arm binary in %v", dir)
 	cmd := exec.Command("go", "build", "-o", filepath.Join(dir, "main-arm"), pkg)
 	cmd.Env = []string{
 		"GOOS=darwin",
@@ -69,9 +73,10 @@ func main() {
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 	if err := cmd.Run(); err != nil {
-		panic(err)
+		log.Fatalln(err)
 	}
 
+	trace("build arm64 binary in %v", dir)
 	cmd = exec.Command("go", "build", "-o", filepath.Join(dir, "main-arm64"), pkg)
 	cmd.Env = []string{
 		"GOOS=darwin",
@@ -82,9 +87,10 @@ func main() {
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 	if err := cmd.Run(); err != nil {
-		panic(err)
+		log.Fatalln(err)
 	}
 
+	trace("make fat binary in %v", dir)
 	cmd = exec.Command(
 		"lipo",
 		"-create",
@@ -95,14 +101,17 @@ func main() {
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 	if err := cmd.Run(); err != nil {
-		panic(err)
+		log.Fatalln(err)
 	}
 
-	cmd = exec.Command("rm", filepath.Join(dir, "main-arm"), filepath.Join(dir, "main-arm64"))
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
-	if err := cmd.Run(); err != nil {
-		panic(err)
+	trace("remove arm binary")
+	if err := os.Remove(filepath.Join(dir, "main-arm")); err != nil {
+		log.Fatalln(err)
+	}
+
+	trace("remove arm64 binary")
+	if err := os.Remove(filepath.Join(dir, "main-arm64")); err != nil {
+		log.Fatalln(err)
 	}
 
 	// TODO(jbd): Copy one by one if Rename fails due to temp dir
@@ -110,12 +119,23 @@ func main() {
 	if *o == "" {
 		*o = "."
 	}
+
 	dst := filepath.Join(*o, "xcode")
+	trace("remove %d", dst)
 	if err := os.RemoveAll(dst); err != nil {
-		panic(err)
+		log.Fatalln(err)
+
 	}
+
+	trace("rename %v to %v", dir, dst)
 	if err := os.Rename(dir, dst); err != nil {
-		panic(err)
+		log.Fatalln(err)
+	}
+}
+
+func trace(format string,  v ...interface{}) {
+	if *verbose {
+		log.Printf(format, v...)
 	}
 }
 
@@ -132,7 +152,7 @@ func goEnv(name string) string {
 	}
 	val, err := exec.Command("go", "env", name).Output()
 	if err != nil {
-		panic(err) // the Go tool was tested to work earlier
+		log.Fatalln(err)
 	}
 	return strings.TrimSpace(string(val))
 }
