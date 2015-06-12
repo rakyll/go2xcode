@@ -86,6 +86,7 @@ func main() {
 	}
 
 	cmd = exec.Command(
+		"xcrun",
 		"lipo",
 		"-create",
 		filepath.Join(dir, "main-arm"),
