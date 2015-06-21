@@ -49,7 +49,7 @@ func main() {
 	layout := map[string][]byte{
 		filepath.Join(dir, "main.xcodeproj/project.pbxproj"):                        projPbxproj,
 		filepath.Join(dir, "main/Info.plist"):                                       infoPlist,
-		filepath.Join(dir, "main/Images.xcassets/AppIcon.appiconset/Contents.json"): constentsJSON,
+		filepath.Join(dir, "main/Images.xcassets/AppIcon.appiconset/Contents.json"): contentsJSON,
 	}
 
 	for dst, v := range layout {
@@ -433,7 +433,7 @@ var projPbxproj = []byte(`// !$*UTF8*$!
 }
 `)
 
-var constentsJSON = []byte(`{
+var contentsJSON = []byte(`{
   "images" : [
     {
       "idiom" : "iphone",
