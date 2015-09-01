@@ -10,7 +10,7 @@ $ go get github.com/rakyll/go2xcode
 ## Usage
 
 ```
-$ go get -d golang.org/x/mobile/example/basic
+$ go get -d golang.org/x/mobile/example/basic/...
 $ go2xcode golang.org/x/mobile/example/basic
 $ cd xcode
 $ xcodebuild # or open the Xcode project.
