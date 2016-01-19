@@ -2,6 +2,7 @@
 
 go2xcode converts a Go package into a Xcode project that targets iOS 8.3.
 
+Note: Not maintained, use [gomobile](godoc.org/golang.org/x/mobile/cmd/gomobile)
 
 ```
 $ go get github.com/rakyll/go2xcode
